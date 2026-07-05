@@ -1,0 +1,1514 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JBTI 职业行为测试图鉴</title>
+  <!-- 引入 Tailwind CSS 样式库 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          aspectRatio: {
+            '4/3': '4 / 3',
+            '3/4': '3 / 4',
+          }
+        }
+      }
+    }
+  </script>
+  <!-- 引入 React 18 与 ReactDOM 运行环境 -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <!-- 引入 Babel 用于在浏览器中实时解析 JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    /* 极致丝滑过渡动画 */
+    .animate-fade-in {
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+    .animate-scale-up {
+      animation: scaleUp 0.2s ease-out forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes scaleUp {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+    /* 隐藏滚动条 */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.3);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(156, 163, 175, 0.5);
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-tr from-slate-50 via-slate-50 to-blue-50/50 text-slate-800 font-sans selection:bg-blue-100 selection:text-blue-900 w-full overflow-x-hidden">
+
+  <div id="root"></div>
+
+  <!-- React 应用程序逻辑 -->
+  <script type="text/babel">
+    const { useState, useMemo } = React;
+
+    // ==================== 10大 JBTI 人格设定及十五维指纹定义 ====================
+    const PERSONALITIES = {
+      FAKE: {
+        id: "FAKE",
+        name: "FAKE（伪装者）",
+        titleName: "伪装者",
+        code: "FAKE",
+        tagline: "大脑自带环境拟态机制，实时渲染最佳人格皮肤",
+        avatar: "🎭",
+        imageUrl: "https://s3.bmp.ovh/2026/07/05/y9M6sScl.png",
+        bg: "bg-purple-50/80 border-purple-100/50",
+        pillBg: "bg-purple-100/60 text-purple-700",
+        color: "text-purple-600",
+        isSpecial: false,
+        subtitle: "编完你的编你的。",
+        description: "经长期观察发现，FAKE 人格的大脑存在一种异常的“环境拟态机制”。他们并不拥有稳定的“自我”，而是拥有一个实时渲染 system——每当进入不同场景，大脑会自动加载对应的“人格皮肤包”。在不同企业或创业公司，他们甚至能生成一种适配 environment 的伪生理反应。对他们来说，真实不是一种状态，而是一个可以被覆盖的缓存文件。",
+        survivalGuide: "请小心，别把‘精装版自己’焊在脸上，偶尔也给系统放个假，漏出点‘毛坯’的真性情吧。",
+        compatibility: { like: "MMMM（仆人）", dislike: "RELAX（出家人）" },
+        fifteenDimensions: [
+          { group: "自我模型", code: "S1", name: "自尊自信", status: "H", desc: "表面稳如面试讲师，内心在跑“哪版我更像人才”。" },
+          { group: "自我模型", code: "S2", name: "自我清晰度", status: "M", desc: "知道自己是谁，但更知道HR想看见谁。" },
+          { group: "自我模型", code: "S3", name: "核心价值", status: "M", desc: "价值观可热插拔，公司文化说什么就先兼容什么。" },
+          { group: "情感模型", code: "E1", name: "依恋安全感", status: "M", desc: "不太相信关系，但很相信话术。" },
+          { group: "情感模型", code: "E2", name: "情感投入度", status: "L", desc: "投入的是表演，不是感情。" },
+          { group: "情感模型", code: "E3", name: "边界与依赖", status: "H", desc: "边界感强，真实自我一般不对外开放。" },
+          { group: "态度模型", code: "A1", name: "世界观倾向", status: "M", desc: "相信世界是剧场，面试是试镜。" },
+          { group: "态度模型", code: "A2", name: "规则与灵活度", status: "H", desc: "规则可以遵守，也可以被包装成“高度适配”。" },
+          { group: "态度模型", code: "A3", name: "人生意义感", status: "M", desc: "意义不重要，先把这轮面过。" },
+          { group: "行动驱力模型", code: "Ac1", name: "动机导向", status: "H", desc: "目标明确：活到下一轮。" },
+          { group: "行动驱力模型", code: "Ac2", name: "决策风格", status: "H", desc: "根据场景即时换皮，决策速度堪比换头像。" },
+          { group: "行动驱力模型", code: "Ac3", name: "执行模式", status: "H", desc: "执行稳定，尤其擅长执行“别露馅”。" },
+          { group: "社交模型", code: "So1", name: "社交主动性", status: "H", desc: "有人设就能开机。" },
+          { group: "社交模型", code: "So2", name: "人际边界感", status: "H", desc: "真心很贵，简历免费。" },
+          { group: "社交模型", code: "So3", name: "表达与真实度", status: "L", desc: "表达满分，真实度待审核。" }
+        ]
+      },
+      MMMM: {
+        id: "MMMM",
+        name: "MMMM（仆人）",
+        titleName: "仆人",
+        code: "MMMM",
+        tagline: "极端稳定的指令依赖型回路，把被需要当成多巴胺",
+        avatar: "🙇",
+        imageUrl: "https://s3.bmp.ovh/2026/07/05/jH8q1MpJ.png",
+        bg: "bg-blue-50/80 border-blue-100/50",
+        pillBg: "bg-blue-100 text-blue-700",
+        color: "text-blue-600",
+        isSpecial: false,
+        subtitle: "好的，收到，马上改。",
+        description: "研究显示，MMMM 人格存在一种极端稳定的“指令依赖型神经回路”。当外界出现“需求”“任务”“压迫”“deadline”等关键词时，他们的大脑自动进入低阻力运行模式，并分泌一种奇特的心理物质：责任感替代多巴胺。他们不需要动机，只需要指令。如果没有人要求他们做事，他们甚至会进入轻度系统崩溃状态。在实验中，当被问及“你想做什么”时，他们的系统响应延迟超过47秒，随后自动输出：“好的。”因此 MMMM 并不是被动服从，而是一种高级自适应结构：他们的存在意义，就是让“被需要”这件事变得可执行。",
+        survivalGuide: "你是一台高效的执行器，但请记得你是有物理电源开关的。学会说‘不’能帮你挽救快要烧坏 of 电容。",
+        compatibility: { like: "I CAN（八边形战士）", dislike: "NO BUT YES（回避型依恋）" },
+        fifteenDimensions: [
+          { group: "自我模型", code: "S1", name: "自尊自信", status: "M", desc: "别人一安排，自己就感觉有用了。" },
+          { group: "自我模型", code: "S2", name: "自我清晰度", status: "L", desc: "一旦没人下指令，就不知道自己该加载哪个程序。" },
+          { group: "自我模型", code: "S3", name: "核心价值", status: "H", desc: "核心价值是“我能扛”。" },
+          { group: "情感模型", code: "E1", name: "依恋安全感", status: "L", desc: "安全感来自被需要，不来自被尊重。" },
+          { group: "情感模型", code: "E2", name: "情感投入度", status: "H", desc: "一投入像签了终身维护协议。" },
+          { group: "情感模型", code: "E3", name: "边界与依赖", status: "L", desc: "边界薄得像试用期工资条。" },
+          { group: "态度模型", code: "A1", name: "世界观倾向", status: "M", desc: "相信努力有用，也相信老板更有用。" },
+          { group: "态度模型", code: "A2", name: "规则与灵活度", status: "H", desc: "流程越清楚，越能稳定燃烧自己。" },
+          { group: "态度模型", code: "A3", name: "人生意义感", status: "M", desc: "意义不一定有，天大的活交了就行。" },
+          { group: "行动驱力模型", code: "Ac1", name: "动机导向", status: "H", desc: "被要求就是启动键。" },
+          { group: "行动驱力模型", code: "Ac2", name: "决策风格", status: "M", desc: "自己会犹豫，别人一催就立刻执行。" },
+          { group: "行动驱力模型", code: "Ac3", name: "执行模式", status: "H", desc: "高压下异常稳定，像打工界电饭煲。" },
+          { group: "社交模型", code: "So1", name: "社交主动性", status: "M", desc: "不主动争取，慢热但真诚。" },
+          { group: "社交模型", code: "So2", name: "人际边界感", status: "L", desc: "别人越靠近需求，自己越自动让路。" },
+          { group: "社交模型", code: "So3", name: "表达与真实度", status: "M", desc: "嘴上“没事”，身体已经加班。" }
+        ]
+      },
+      ADHD: {
+        id: "ADHD",
+        name: "ADHD（天才）",
+        titleName: "天才",
+        code: "ADHD",
+        tagline: "脑内多线程并行宇宙，永远在开始，从不曾结束",
+        avatar: "🌀",
+        imageUrl: "https://s3.bmp.ovh/2026/07/05/rtL1ZOfr.png",
+        bg: "bg-amber-50/80 border-amber-100/50",
+        pillBg: "bg-amber-100 text-amber-700",
+        color: "text-amber-600",
+        isSpecial: false,
+        subtitle: "我现在开始了！(第58次开始)",
+        description: "最新脑部扫描发现，ADHD 人格的大脑并非“注意力缺陷”，而是存在一个异常活跃 of “并行宇宙切换系统”。他们的意识并不是线性流动，而是像浏览器标签页一样不断分裂、生成、冻结、重启。在尝试“开始工作”的瞬间，他们会同时启动多个项目与多线狂欢，因此很难进入持续状态。",
+        survivalGuide: "给你的脑内浏览器装个广告拦截插件吧，哪怕今天只让一个标签页顺利加载完，也是伟大的胜利。",
+        compatibility: { like: "HOPE（玄学大师）", dislike: "MMMM（仆人）" },
+        fifteenDimensions: [
+          { group: "自我模型", code: "S1", name: "自尊自信", status: "M", desc: "相信自己很有潜力，只是潜力正在开30个窗口。" },
+          { group: "自我模型", code: "S2", name: "自我清晰度", status: "L", desc: "今天想做运营，明天想做AI，后天想开店。" },
+          { group: "自我模型", code: "S3", name: "核心价值", status: "M", desc: "核心价值很多，但都在不同标签页里。" },
+          { group: "情感模型", code: "E1", name: "依恋安全感", status: "M", desc: "对机会有热情，对持续有恐惧。" },
+          { group: "情感模型", code: "E2", name: "情感投入度", status: "H", desc: "三分钟内可以燃烧全部人生理想。" },
+          { group: "情感模型", code: "E3", name: "边界与依赖", status: "M", desc: "想独立，但经常被手机通知劫持。" },
+          { group: "态度模型", code: "A1", name: "世界观倾向", status: "H", desc: "相信万物皆可开始。" },
+          { group: "态度模型", code: "A2", name: "规则与灵活度", status: "H", desc: "灵活到规则追不上。" },
+          { group: "态度模型", code: "A3", name: "人生意义感", status: "H", desc: "意义感经常在周一早上离线。" },
+          { group: "行动驱力模型", code: "Ac1", name: "动机导向", status: "L", desc: "新鲜感和好奇心是唯一的汽油。" },
+          { group: "行动驱力模型", code: "Ac2", name: "决策风格", status: "M", desc: "决策前疯狂搜集资料，随后在分叉中忘却初衷。" },
+          { group: "行动驱力模型", code: "Ac3", name: "执行模式", status: "L", desc: "启动处于超高频状态，续航模式全凭天意。" },
+          { group: "社交模型", code: "So1", name: "社交主动性", status: "L", desc: "不主动卷入人间纷争。" },
+          { group: "社交模型", code: "So2", name: "人际边界感", status: "H", desc: "边界像禅房门，轻轻关着。" },
+          { group: "社交模型", code: "So3", name: "表达与真实度", status: "H", desc: "真实、平静，并且真的不太care。" }
+        ]
+      },
+      ICAN: {
+        id: "ICAN",
+        name: "I CAN（八边形战士）",
+        titleName: "八边形战士",
+        code: "I CAN",
+        tagline: "技能树野蛮生长，在干杂活的道路上卷成了球",
+        avatar: "🛠️",
+        imageUrl: "https://s3.bmp.ovh/2026/07/05/RedJfovY.png",
+        bg: "bg-emerald-50/80 border-emerald-100/50",
+        pillBg: "bg-emerald-100 text-emerald-700",
+        color: "text-emerald-600",
+        isSpecial: false,
+        subtitle: "行，我来，这个我也会一点点。",
+        description: "I CAN 人格表现出全维度均衡性：策划、设计、剪视频、写代码、运营无一不通。然而这导致他们在招聘系统中往往变成一个“没有明显标签、容易过度拟合”的万能杂务选手。",
+        survivalGuide: "万事皆通等于万事皆平。试着砍掉几个辅助分支，集中资源把一两个核心技能‘精炼加十’。",
+        compatibility: { like: "MMMM（仆人）", dislike: "YTX（乙驼祥）" },
+        fifteenDimensions: [
+          { group: "自我模型", code: "S1", name: "自尊自信", status: "H", desc: "什么都会一点，所以觉得自己应该能行。" },
+          { group: "自我模型", code: "S2", name: "自我清晰度", status: "M", desc: "清楚自己能力多，但不清楚到底该卖哪一个。" },
+          { group: "自我模型", code: "S3", name: "核心价值", status: "H", desc: "核心价值是“我能学”。" },
+          { group: "情感模型", code: "E1", name: "依恋安全感", status: "M", desc: "不怕挑战，怕被问“你到底专精什么”。" },
+          { group: "情感模型", code: "E2", name: "情感投入度", status: "H", desc: "每条路都想试，每个技能都想点亮。" },
+          { group: "情感模型", code: "E3", name: "边界与依赖", status: "M", desc: "能合作，也能硬撑。" },
+          { group: "态度模型", code: "A1", name: "世界观倾向", status: "H", desc: "相信世界需要复合型人才，虽然JD不一定信。" },
+          { group: "态度模型", code: "A2", name: "规则与灵活度", status: "H", desc: "适配力强到快失去形状。" },
+          { group: "态度模型", code: "A3", name: "人生意义感", status: "M", desc: "意义在“多会一点”，焦虑在“不够尖”。" },
+          { group: "行动驱力模型", code: "Ac1", name: "动机导向", status: "H", desc: "成长驱动明显，技能树永远在发芽。" },
+          { group: "行动驱力模型", code: "Ac2", name: "决策风格", status: "M", desc: "会权衡，但容易越权衡越分叉。" },
+          { group: "行动驱力模型", code: "Ac3", name: "执行模式", status: "H", desc: "给目标就能冲，给定位就会卡." }
+        ]
+      },
+      HOPE: {
+        id: "HOPE",
+        name: "HOPE（玄学大师）",
+        titleName: "玄学大师",
+        code: "HOPE",
+        tagline: "投简历前先抽塔罗牌，面试前必须看黄历、测八字、占一卦",
+        avatar: "🔮",
+        imageUrl: "https://s3.bmp.ovh/2026/07/05/14ASNXdz.png",
+        bg: "bg-pink-50/80 border-pink-100/50",
+        pillBg: "bg-pink-100 text-pink-700",
+        color: "text-pink-600",
+        isSpecial: false,
+        subtitle: "我掐指一算，投了也是白投。",
+        description: "在求职路上面对未知挑战，HOPE选择与高维宇宙建立能量连接。比起机械地修改简历，他们更偏向于点击鼠标前推算星盘黄历。在他们看来，拿到 offer 是一场命运磁场的调试，坚信顺应天命才是最佳退路。",
+        survivalGuide: "偶尔也可以合上星盘、收起塔罗，闭着眼睛投两家试试. 有时候现实中踏出第一步，连恒星都得给你让路。",
+        compatibility: { like: "RELAX（出家人）", dislike: "ICAN（八边形战士）" },
+        fifteenDimensions: [
+          { group: "自我模型", code: "S1", name: "自尊自信", status: "M", desc: "求职自信取决于今日占卜：抽到“圣杯九”感觉能当CEO，抽到“逆位塔”直接退隐江湖。" },
+          { group: "自我模型", code: "S2", name: "自我清晰度", status: "H", desc: "对自己的岗位方向经常迷茫，但对自己的命理 and 运势起伏排得比简历还要清爽。" },
+          { group: "自我模型", code: "S3", name: "核心价值", status: "M", desc: "坚信“命里有时终须有，命里无时莫强求”的玄学能量守恒定律。" },
+          { group: "情感模型", code: "E1", name: "依恋安全感", status: "L", desc: "安全感从来不来自公司的口头画饼，只来自办公桌财位风水 and 幸运物的加持。" },
+          { group: "情感模型", code: "E2", name: "情感投入度", status: "M", desc: "对塔罗星盘 and 卦象推演倾注100%的热诚，对世俗格子间的考核报以随缘随喜的态度。" },
+          { group: "情感模型", code: "E3", name: "边界与依赖", status: "H", desc: "防护罩拉满，用红绳、粉晶 and 电子木鱼筑起坚不可摧的负能量职场防火墙。" },
+          { group: "态度模型", code: "A1", name: "世界观倾向", status: "L", desc: "认为求职不顺多是磁场不合或水星逆行作祟，比起复盘，更倾向于先“除障”净化。" },
+          { group: "态度模型", code: "A2", name: "规则与灵活度", status: "M", desc: "遵守日常规迹，但只要黄历显示“忌出行、诸事不宜”，便坚决顺应气场，宁可改天面。" },
+          { group: "态度模型", code: "A3", name: "人生意义感", status: "M", desc: "追求与高维能量的同频，当前的工位只是体验红尘渡劫的一个临时坐标系。" },
+          { group: "行动驱力模型", code: "Ac1", name: "动机导向", status: "M", desc: "行动受天象指引：新月来临时广撒简历，满月期则安详闭关吸收能量。" },
+          { group: "行动驱力模型", code: "Ac2", name: "决策风格", status: "H", desc: "决策前必起一卦，塔罗、六爻、生辰八字连环推演，直到求得最优卦象。" },
+          { group: "行动驱力模型", code: "Ac3", name: "执行模式", status: "M", desc: "开始干活前需要进行神圣的“净手、焚香、静心”仪式，非大吉时辰不轻易开机。" },
+          { group: "社交模型", code: "So1", name: "社交主动性", status: "L", desc: "不屑于勉强的职场社交，只暗中观察谁的星盘跟自己是天作之合。" },
+          { group: "社交模型", code: "So2", name: "人际边界感", status: "H", desc: "如果感觉对方磁场不对或者运势冲克，会默默合密并在心中念叨“退避三舍”。" },
+          { group: "社交模型", code: "So3", name: "表达与真实度", status: "H", desc: "跟合磁场的同道中人讨论运势、排八字 and 塔罗逆位时，表达极为真实且全无防备。" }
+        ]
+      },
+      NBY: {
+        id: "NBY",
+        name: "NO BUT YES（回避型依恋）",
+        titleName: "回避型依恋",
+        code: "NBY",
+        tagline: "距离越远越渴望，距离越近越想逃",
+        avatar: "🌪️",
+        imageUrl: "https://s3.bmp.ovh/2026/07/05/zPAy6TmE.png",
+        bg: "bg-teal-50/80 border-teal-100/50",
+        pillBg: "bg-teal-100 text-teal-700",
+        color: "text-teal-600",
+        isSpecial: false,
+        subtitle: "你很好，但请离我的工位远一点。",
+        description: "该人格表现出极其复杂的“接近-撤离双向驱动系统”。当机会出现时，他们的第一反应是“可以”；但当机会真的靠近时，他们会立即触发“系统隐身机制”。距离越远，渴望越强；距离越近，逃逸越快。他们并不是不想成功，而是对“成功的现实形态”存在结构性不适配。因此他们的理想状态是：机会存在，但永远不要确认关系。",
+        survivalGuide: "完美的坑位只存在于未入职之前。允许事物有瑕疵，就像允许自己偶尔犯错一样。别让隐身机制成了你的逃生舱，最后漂流到无人深空。",
+        compatibility: { like: "RESUMIZER（海王）", dislike: "MMMM（仆人）" },
+        fifteenDimensions: [
+          { group: "自我模型", code: "S1", name: "自尊自信", status: "L", desc: "嘴上想要，心里觉得自己不一定配接住。" },
+          { group: "自我模型", code: "S2", name: "自我清晰度", status: "M", desc: "知道自己在躲，但躲得很有逻辑。" },
+          { group: "自我模型", code: "S3", name: "核心价值", status: "M", desc: "想靠近机会，也想保住安全距离。" },
+          { group: "情感模型", code: "E1", name: "依恋安全感", status: "L", desc: "机会一靠近，系统自动后撤。" },
+          { group: "情感模型", code: "E2", name: "情感投入度", status: "M", desc: "远看很上头，近看想下线。" },
+          { group: "情感模型", code: "E3", name: "边界与依赖", status: "H", desc: "边界感极强，强到机会都进不来。" },
+          { group: "态度模型", code: "A1", name: "世界观倾向", status: "M", desc: "相信好事存在，但最好别发生在今天。" },
+          { group: "态度模型", code: "A2", name: "规则与灵活度", status: "M", desc: "能适应，但需要缓冲区。" },
+          { group: "态度模型", code: "A3", name: "人生意义感", status: "M", desc: "意义是有的，只是别逼我立刻拥有。" },
+          { group: "行动驱力模型", code: "Ac1", name: "动机导向", status: "M", desc: "有动机，但动机怕见光。" },
+          { group: "行动驱力模型", code: "Ac2", name: "决策风格", status: "L", desc: "越重要越拖，越想要越装死。" },
+          { group: "行动驱力模型", code: "Ac3", name: "执行模式", status: "L", desc: "启动前需要漫长心理热身。" },
+          { group: "社交模型", code: "So1", name: "社交主动性", status: "L", desc: "别人不找我最好，找我也别太突然。" },
+          { group: "社交模型", code: "So2", name: "人际边界感", status: "H", desc: "靠太近会触发逃生通道。" },
+          { group: "社交模型", code: "So3", name: "表达与真实度", status: "M", desc: "真实存在，常被“没事”封印。" }
+        ]
+      },
+      YTX: {
+        id: "YTX",
+        name: "YTX（乙驼祥）",
+        titleName: "乙驼祥",
+        code: "YTX",
+        tagline: "手握名校学历证书，却在严峻的就业市场里体验着现代版“孔乙己与祥子”的反复自嘲拉扯",
+        avatar: "🦚",
+        imageUrl: "https://s3.bmp.ovh/2026/07/05/KZomTCFj.png", // 乙驼祥专属
+        bg: "bg-amber-50/80 border-amber-100/50",
+        pillBg: "bg-amber-100 text-amber-700",
+        color: "text-amber-600",
+        isSpecial: false,
+        subtitle: "长衫是我脱不下的保护壳，也是我最后的遮羞布。",
+        description: "YTX（乙驼祥）是典型的高学历深陷现实摩擦的打工人格。他们拥有较好的学历背景，却在极差的就业环境里被生活无情按地摩擦。他们的大脑时刻在进行高维度的自我审视——既有“孔乙己”脱不下知识分子长衫的自嘲，又有“骆驼祥子”拼命奔跑却依然被环境毒打的推脱，偶尔还会像“祥林嫂”一样，见人就反复叹息：‘我单知道名校毕业前景好，却不知道现在连当个普通客服都要看生辰八字……’。对他们而言，那件脱不下的长衫其实根本不是骄傲，只是一种保护自己脆弱尊严 of 自嘲护甲。",
+        survivalGuide: "放下长衫不是让你否定自己过去的努力，而是让你明白：祥子的车会翻，孔乙己的长衫会旧，但你作为现代有志青年，拍拍身上的土，换身轻便运动服，照样能开辟一片全新赛道。",
+        compatibility: { like: "HOPE（玄学大师）", dislike: "RELAX（出家人）" },
+        fifteenDimensions: [
+          { group: "自我模型", code: "S1", name: "自尊自信", status: "M", desc: "学术殿堂里自信满分，人才市场里屡遭打击，自尊心在自傲与自卑中反复摩擦。" },
+          { group: "自我模型", code: "S2", name: "自我清晰度", status: "H", desc: "对学历、经历、身份定位记得太清楚，清晰到跟基层杂活岗位产生剧烈排异反应。" },
+          { group: "自我模型", code: "S3", name: "核心价值", status: "H", desc: "坚信“我不能白读这个书”，即使现实环境在逼着他接受“先进厂拧螺丝”的妥协生存." },
+          { group: "情感模型", code: "E1", name: "依恋安全感", status: "L", desc: "岗位越不需要学历，内心就越没有安全感，总觉得自己的青春与汗水被生活“白嫖”了。" },
+          { group: "情感模型", code: "E2", name: "情感投入度", status: "H", desc: "对“自我价值证明”投入极深，甚至在反复拉扯 and 摩擦中陷入深度的沉没成本执念。" },
+          { group: "情感模型", code: "E3", name: "边界与依赖", status: "M", desc: "极度渴望尽早独立摆脱困境，却被过往的优异成就和长辈的期待牢牢锁死，背着包袱前行。" },
+          { group: "态度模型", code: "A1", name: "世界观倾向", status: "L", desc: "世界不一定坏，但确实反射出高知分子的高傲。" },
+          { group: "态度模型", code: "A2", name: "规则与灵活度", status: "L", desc: "很难放弃旧有体系去完美自适应。" },
+          { group: "态度模型", code: "A3", name: "人生意义感", status: "H", desc: "意义感强，所以落差也很疼。" },
+          { group: "行动驱力模型", code: "Ac1", name: "动机导向", status: "M", desc: "极度渴望成功上岸，仅靠学历已经无法在冰冷的环境里轻松降落。" },
+          { group: "行动驱力模型", code: "Ac2", name: "决策风格", status: "M", desc: "在投递不匹配的低门槛岗位时陷入天人交战，反复拉扯，不断提防沉没成本。" },
+          { group: "行动驱力模型", code: "Ac3", name: "执行模式", status: "M", desc: "能写出极其漂亮的高维方案，但在做打杂等基础活时，执行力容易被“长衫自校验系统”卡死。" },
+          { group: "社交模型", code: "So1", name: "社交主动性", status: "L", desc: "不愿参加任何同窗聚会，害怕被问起“最近在哪高就”，宁可作为现代版避世隐者自我放空。" },
+          { group: "社交模型", code: "So2", name: "人际边界感", status: "H", desc: "尊严边界筑得极高，对任何带有同情或看低高学历意图的职场言行极为敏感排斥。" },
+          { group: "社交模型", code: "So3", name: "表达与真实度", status: "H", desc: "倾诉欲望很强，常带有祥林嫂式的自嘲自叹，在酸楚与戏谑中展露出最真实的打工现状。" }
+        ]
+      },
+      WRKR: {
+        id: "WRKR",
+        name: "WORKER（班马）",
+        titleName: "班马",
+        code: "WRKR",
+        tagline: "身体在工位当牛马，灵魂在野区反复出逃",
+        avatar: "🦓",
+        imageUrl: "https://s3.bmp.ovh/2026/07/05/eElMggqb.png", // 班马专属
+        bg: "bg-rose-50/80 border-rose-100/50",
+        pillBg: "bg-rose-100 text-rose-700",
+        color: "text-rose-600",
+        isSpecial: false,
+        subtitle: "肉体在开会，灵魂已辞职300次。",
+        description: "WORKER 人格表现出典型的“双轨存在结构”。我们在现实层面已完成就业适配，但在心理层面仍持续运行“逃离路径模拟系统”。身体在公司，意识在辞职。他们并不是不稳定，而是稳定地处于下一阶段预备状态。",
+        survivalGuide: "您的电量管理堪称大师，带薪在工位上积蓄生命的余热，放空才是最稳妥的能量自循环路径。",
+        compatibility: { like: "RELAX（出家人）", dislike: "MMMM（仆人）" },
+        fifteenDimensions: [
+          { group: "自我模型", code: "S1", name: "自尊自信", status: "M", desc: "已经就业，证明能运行，但不知道为什么还想跑。" },
+          { group: "自我模型", code: "S2", name: "自我清晰度", status: "M", desc: "知道自己人在工位，不确定心在哪片草原。" },
+          { group: "自我模型", code: "S3", name: "核心价值", status: "M", desc: "想稳定，也想自由。" },
+          { group: "情感模型", code: "E1", name: "依恋安全感", status: "M", desc: "有工资就有安全感，但不多。" },
+          { group: "情感模型", code: "E2", name: "情感投入度", status: "L", desc: "身体打卡，灵魂请假。" },
+          { group: "情感模型", code: "E3", name: "边界与依赖", status: "M", desc: "能维持关系，但不想被工作完全拥有。" },
+          { group: "态度模型", code: "A1", name: "世界观倾向", status: "M", desc: "相信工作必要，但不相信工作神圣。" },
+          { group: "态度模型", code: "A2", name: "规则与灵活度", status: "H", desc: "流程能走，班能上，心能飘。" },
+          { group: "态度模型", code: "A3", name: "人生意义感", status: "L", desc: "意义感经常在周一早上离线。" },
+          { group: "行动驱力模型", code: "Ac1", name: "动机导向", status: "M", desc: "被现实推动，不是被热爱点燃。" },
+          { group: "行动驱力模型", code: "Ac2", name: "决策风格", status: "M", desc: "每天想辞职，每天正常上班。" },
+          { group: "行动驱力模型", code: "Ac3", name: "执行模式", status: "H", desc: "该交的活会交，该碎的心也会碎。" },
+          { group: "社交模型", code: "So1", name: "社交主动性", status: "M", desc: "职场社交能应付，带薪交流、互利共赢。" },
+          { group: "社交模型", code: "So2", name: "人际边界感", status: "H", desc: "工作是工作，我是我。" },
+          { group: "社交模型", code: "So3", name: "表达与真实度", status: "M", desc: "嘴上“好的”，眼神已经去了远方。" }
+        ]
+      },
+      RSMZ: {
+        id: "RSMZ",
+        name: "RESUMIZER（海王）",
+        titleName: "海王",
+        code: "RSMZ",
+        tagline: "海量投递，全网撒网，绝不为单一岗位守身如玉",
+        avatar: "🐙",
+        imageUrl: "https://s3.bmp.ovh/2026/07/05/ZqB62ffe.png", // 海王专属
+        bg: "bg-red-50/80 border-red-100/50",
+        pillBg: "bg-red-100 text-red-700",
+        color: "text-red-600",
+        isSpecial: false,
+        subtitle: "多一个Offer也是多一份安全感。",
+        description: "RESUMIZER 人格具有高度扩散型社交求职结构。投递不是选择，而是一场多概率实验。在他们的系统里，已读=潜在连接建立，未回复=可能性未激活。绝不为单一岗位在一棵树上吊死，保持广撒网路线。",
+        survivalGuide: "万花丛中过，片叶不沾身。虽然可能性无限，但人的精力有限。精挑细选哪怕一个真正的归宿，也胜过一万张未回复 of 数字传单。",
+        compatibility: { like: "NO BUT YES（回避型依恋）", dislike: "MMMM（仆人）" },
+        fifteenDimensions: [
+          { group: "自我模型", code: "S1", name: "自尊自信", status: "H", desc: "相信总有一个岗位会回头。" },
+          { group: "自我模型", code: "S2", name: "自我清晰度", status: "M", desc: "定位不一定清楚，但池子一定够大。" },
+          { group: "自我模型", code: "S3", name: "核心价值", status: "L", desc: "核心价值暂时让位于“广撒网”。" },
+          { group: "情感模型", code: "E1", name: "依恋安全感", status: "M", desc: "不绑定单一机会，所以不容易被一个HR击穿。" },
+          { group: "情感模型", code: "E2", name: "情感投入度", status: "L", desc: "每份简历都有可能，但都不是唯一。" },
+          { group: "情感模型", code: "E3", name: "边界与依赖", status: "H", desc: "无情投递，有情等待。" },
+          { group: "态度模型", code: "A1", name: "世界观倾向", status: "H", desc: "相信概率，相信奇迹，相信下一封已读。" },
+          { group: "态度模型", code: "A2", name: "规则与灵活度", status: "H", desc: "岗位要求不是墙，是参考答案。" },
+          { group: "态度模型", code: "A3", name: "人生意义感", status: "M", desc: "意义是建立可能性，哪怕可能性不回消息。" },
+          { group: "行动驱力模型", code: "Ac1", name: "动机导向", status: "H", desc: "投递本身就是多巴胺." },
+          { group: "行动驱力模型", code: "Ac2", name: "决策风格", status: "H", desc: "不纠结，先投再说。" },
+          { group: "行动驱力模型", code: "Ac3", name: "执行模式", status: "H", desc: "执行强，情感弱，像简历版流水线。" },
+          { group: "社交模型", code: "So1", name: "社交主动性", status: "H", desc: "主动建立批量联系。" },
+          { group: "社交模型", code: "So2", name: "人际边界感", status: "H", desc: "谁都可以聊，但谁都别太认真。" },
+          { group: "社交模型", code: "So3", name: "表达与真实度", status: "M", desc: "真实不重要，匹配度重要。" }
+        ]
+      },
+      RLX: {
+        id: "RLX",
+        name: "RELAX（出家人）",
+        titleName: "出家人",
+        code: "RLX",
+        imageUrl: "https://s3.bmp.ovh/2026/07/05/opYj0Cde.png", // 出家人专属
+        bg: "bg-slate-100 border-slate-200",
+        pillBg: "bg-slate-200 text-slate-700",
+        color: "text-slate-500",
+        isSpecial: true,
+        subtitle: "I don't car。",
+        description: "RELAX 人格被定义为 '职业欲望系统关闭状态'。他们的大脑对“机会”“竞争”“上岸”等词汇呈现低反应甚至负反应。在深度访谈中，他们表现出一种极其稳定的认知结构：“如果不发生，也可以。”值得注意的是，这种状态并非消极，而是一种 system 级降载行为——主动关闭职业焦虑进程，以维持最低能耗运行。自然、空无、一切无挂碍。",
+        survivalGuide: "您的电量管理堪称大师，成功在大厂服务器宕机前实现了物理断电。只要低功耗运行不影响生活保障，那就继续优雅地阿弥佛陀吧。",
+        compatibility: { like: "HOPE（玄学大师）", dislike: "FAKE（伪装者）" },
+        fifteenDimensions: [
+          { group: "自我模型", code: "S1", name: "自尊自信", status: "M", desc: "收获不了内心的宁静，行不行也无所谓了。" },
+          { group: "自我模型", code: "S2", name: "自我清晰度", status: "H", desc: "关爱身体与精神，很清楚自己已经退出欲望系统。" },
+          { group: "自我模型", code: "S3", name: "核心价值", status: "H", desc: "核心价值是低消耗活着。" },
+          { group: "情感模型", code: "E1", name: "依恋安全感", status: "H", desc: "不抓机会，所以机会也很难伤到他。" },
+          { group: "情感模型", code: "E2", name: "情感投入度", status: "L", desc: "对工作投入低，对内心安静投入高。" },
+          { group: "情感模型", code: "E3", name: "边界与依赖", status: "H", desc: "边界稳定，焦虑无法入寺。" },
+          { group: "态度模型", code: "A1", name: "世界观倾向", status: "M", desc: "世界怎样都行，别太吵就行。" },
+          { group: "态度模型", code: "A2", name: "规则与灵活度", status: "M", desc: "可以配合，但不会燃烧。" },
+          { group: "态度模型", code: "A3", name: "人生意义感", status: "M", desc: "意义不必宏大，今天不崩也算圆满。" },
+          { group: "行动驱力模型", code: "Ac1", name: "动机导向", status: "L", desc: "不太被结果点燃，更像低电量省电模式。" },
+          { group: "行動驱力模型", code: "Ac2", name: "决策风格", status: "M", desc: "会想，但不执着。" },
+          { group: "行动驱力模型", code: "Ac3", name: "执行模式", status: "L", desc: "能动，但需要宇宙给一点推力。" },
+          { group: "社交模型", code: "So1", name: "社交主动性", status: "L", desc: "不主动卷入人间纷争。" },
+          { group: "社交模型", code: "So2", name: "人际边界感", status: "H", desc: "边界像禅房门，轻轻关着。" },
+          { group: "社交模型", code: "So3", name: "表达与真实度", status: "H", desc: "真实、平静，并且真的不太care。" }
+        ]
+      }
+    };
+
+    // ==================== 32道由用户提供的最新测试选择题 (已彻底修复并合并) ====================
+    const QUESTIONS = [
+      {
+        id: 1,
+        question: "📝 Q1｜你如何优化简历？",
+        options: [
+          { text: "A. 真实描述：是什么就写什么，甚至连自己擅长‘呼吸’与‘发呆’也写上去。", scores: { RLX: 3, YTX: 1 } },
+          { text: "B. 轻微优化：把‘熟练使用翻译软件’写成‘精通跨语言多线程协同沟通’。", scores: { MMMM: 3 } },
+          { text: "C. AI润色一版再说：让大模型重塑我的人生，甚至怀疑简历里这个人是不是我。", scores: { ICAN: 3 } },
+          { text: "D. 改到不敢投：简历太完美，以至于连我自己都觉得不配去这家公司上班。", scores: { FAKE: 3, HOPE: 2 } }
+        ]
+      },
+      {
+        id: 2,
+        question: "📝 Q2｜投递频率是？",
+        options: [
+          { text: "A. 精选3个：极度挑剔，既怕对方不要，又怕对方突然录用我让我在办公室端茶送水。", scores: { NBY: 3 } },
+          { text: "B. 每周10个：按部就班，遵循一个老实牛马的日常打卡仪式。", scores: { MMMM: 3 } },
+          { text: "C. 海投50+：全网无差别投递，简历发出去 the moment 就把它遗忘了。", scores: { RSMZ: 3 } },
+          { text: "D. 投了但忘了：大脑处于多线程散架状态，对方打电话来我还要现查我是谁。", scores: { ADHD: 3 } }
+        ]
+      },
+      {
+        id: 3,
+        question: "📝 Q3｜面试前状态",
+        options: [
+          { text: "A. 认真准备：反复背诵熟记各种行话，提前预演。", scores: { MMMM: 3 } },
+          { text: "B. 有点焦虑：救救我救救我上天赐我一个心软的面试官吧！。", scores: { WRKR: 3 } },
+          { text: "C. 已经脑内失败：还没踏进面试门，已经构想好被拒绝后如何体面地社会性死亡。", scores: { HOPE: 3 } },
+          { text: "D. 想逃：走到面试公司楼下，触发 system 隐身本能，开始找借口回家。", scores: { NBY: 3 } }
+        ]
+      },
+      {
+        id: 4,
+        question: "📝 Q4｜收到HR已读不回",
+        options: [
+          { text: "A. 等待：安静地快速等待中！。", scores: { MMMM: 3 } },
+          { text: "B. 再发一次：发挥不气馁精神，反手追问句‘您好请问...’。", scores: { RSMZ: 3 } },
+          { text: "C. 直接判死刑：心里立刻宣布本次求职全面失败，命运再次得到清算。", scores: { HOPE: 3 } },
+          { text: "D. 认为对方损失：冷笑一声‘呵失去我是你们的损失’。", scores: { YTX: 3 } }
+        ]
+      },
+      {
+        id: 5,
+        question: "📝 Q5｜你怎么看“稳定工作”",
+        options: [
+          { text: "A. Security：像港湾一样包容我无处安放的灵魂。", scores: { MMMM: 3 } },
+          { text: "B. 还行：能按时发工资支持我脑内的周末跑路大计即可。", scores: { WRKR: 3 } },
+          { text: "C. 没意义：一场游戏罢了，稳定等于提前进入断电状态。", scores: { RLX: 3 } },
+          { text: "D. 不存在：这个世界电网随时可能崩盘，稳定只是幻觉。", scores: { HOPE: 3 } }
+        ]
+      },
+      {
+        id: 6,
+        question: "📝 Q6｜如果被问职业规划",
+        options: [
+          { text: "A. 说实话：“我只想维持生存，如果能不发生竞争就更好。”", scores: { RLX: 3 } },
+          { text: "B. 编一个合理版本：当场加载精装皮肤，侃侃而谈‘赋能企业生态’。", scores: { FAKE: 3 } },
+          { text: "C. 背模板：流畅背诵百度百科，主打一个无挑剔、顺从、完美的回答。", scores: { MMMM: 3 } },
+          { text: "D. 直接宕机：脑内浏览器突然卡死，思绪飘到‘中午吃麦麦还是k’上。", scores: { ADHD: 3 } }
+        ]
+      },
+      {
+        id: 7,
+        question: "📝 Q7｜你对AI写简历的态度",
+        options: [
+          { text: "A. 工具：老老实实用它辅助写写套话，扮演合格的高效工具人。", scores: { MMMM: 3 } },
+          { text: "B. 依赖：用AI把我的平庸技能包装成‘完美牛马’。", scores: { ICAN: 3 } },
+          { text: "C. 外包人生：直接让AI替我跟HR聊天，我甚至懒得去读取聊天记录。", scores: { ADHD: 3 } },
+          { text: "D. 我就是AI：根据招聘方的需求实时输出最完美的伪装回答，莫得感情。", scores: { FAKE: 3 } }
+        ]
+      },
+      {
+        id: 8,
+        question: "📝 Q8｜你改简历次数",
+        options: [
+          { text: "A. 1-2次：随缘吧，简历只是身外物，看缘分，看得懂就看，看不懂拉倒。", scores: { RLX: 3 } },
+          { text: "B. 3-5次：基本改改，够用就行，能应对牛马的基础指令。", scores: { MMMM: 3 } },
+          { text: "C. 10+：疯狂堆叠修图、剪视频、码代码的全栈属性，力争八面玲珑。", scores: { ICAN: 3 } },
+          { text: "D. 无限循环：每进一个新面试，大脑实时渲染，卸载并安装全新版本自己。", scores: { FAKE: 3 } }
+        ]
+      },
+      {
+        id: 9,
+        question: "📝 Q9｜面试失败你会",
+        options: [
+          { text: "A. 复盘：研究我的哪一个技能没有对齐市场与岗位。", scores: { ICAN: 3 } },
+          { text: "B. 摆烂：躺平放空。", scores: { RLX: 3 } },
+          { text: "C. 预判过：‘我就说吧，0.3秒前我就已经知道这家公司绝对不会要我。’", scores: { HOPE: 3 } },
+          { text: "D. 删除人生记录：转头开始疯狂网上冲浪试图忘记今天的面试。", scores: { ADHD: 3 } }
+        ]
+      },
+      {
+        id: 10,
+        question: "📝 Q10｜你对offer的期待",
+        options: [
+          { text: "A. 合适：只要有固定任务分配，能让我有被需要的安稳感就行。", scores: { MMMM: 3 } },
+          { text: "B. 钱多：给我足够的跑路准备金，好让我在脑内辞职时更有底气。", scores: { WRKR: 3 } },
+          { text: "C. 别太累：不想要竞争，不需要上岸，维持中庸状态。", scores: { RLX: 3 } },
+          { text: "D. 不存在：这个世界不会有真正适合我的完美坑位，都是饼。", scores: { HOPE: 3 } }
+        ]
+      },
+      {
+        id: 11,
+        question: "📝 Q11｜工作压力来临",
+        options: [
+          { text: "A. 应对：ego极低，毫无怨言，顺从指令。", scores: { MMMM: 3 } },
+          { text: "B. 扛：手拿策划案，肩扛ppt，全能输出，在当牛马的路上卷出风采。", scores: { ICAN: 3 } },
+          { text: "C. 逃：第一反应是隐身，躲进茶水间假装手机信号不好。", scores: { NBY: 3 } },
+          { text: "D.变强（被迫）：身体在疯狂工作，脑中的辞职规划愈发清晰。", scores: { WRKR: 3 } }
+        ]
+      },
+      {
+        id: 12,
+        question: "📝 Q12｜空窗期你在做什么",
+        options: [
+          { text: "A. 学习：没有offer一定是我的知识储备不够全面。", scores: { YTX: 3 } },
+          { text: "B. 焦虑：一直找不到工作怎么办？", scores: { HOPE: 3 } },
+          { text: "C. 逃避：同时开启打扫卫生、打游戏、重装电脑系统、研究外星人等18个进程。", scores: { ADHD: 3 } },
+          { text: "D. 观测人生：看着窗外发呆，觉得不工作也没什么大不了，一切皆虚空。", scores: { RLX: 3 } }
+        ]
+      },
+      {
+        id: 13,
+        question: "📝 Q13｜你对“上岸”的理解",
+        options: [
+          { text: "A. 入职：终于可以再次光明正大地接收来自社会的指令，安全靠岸。", scores: { MMMM: 3 } },
+          { text: "B. 稳定: 身体安稳在工位上，可以有条不紊地继续脑内逃跑计划。", scores: { WRKR: 3 } },
+          { text: "C. 幻觉：上了岸也只是从一个牛马圈换到了另一个更高级的精致牛马圈。", scores: { HOPE: 3 } },
+          { text: "D. 语言陷阱：把牛马项圈美化为‘安全感’，只是世俗规则对生命的绑架。", scores: { RLX: 3 } }
+        ]
+      },
+      {
+        id: 14,
+        question: "📝 Q14｜看到理想岗位",
+        options: [
+          { text: "A. 秒投：立刻将我的简历海投出去，像海王遇鱼一样发出信号。", scores: { RSMZ: 3 } },
+          { text: "B. 观望：距离越远越想要，一旦对方真让我去投递，我就想立刻隐身。", scores: { NBY: 3 } },
+          { text: "C. 放弃：觉得竞争肯定超级激烈，反正我肯定选不上，假装没看见划走。", scores: { HOPE: 3 } },
+          { text: "D. 预测失败：脑补完我投递、面试被刁难、入职被排挤的完整凄凉一生，选择退出。", scores: { HOPE: 3 } }
+        ]
+      },
+      {
+        id: 15,
+        question: "📝 Q15｜你对团队合作",
+        options: [
+          { text: "A. 配合：绝对服从，致力于成为完美螺丝钉。", scores: { MMMM: 3 } },
+          { text: "B. 适配：根据团队配置，光速渲染出对应性格的皮肤融入他们。", scores: { FAKE: 3 } },
+          { text: "C. 消耗：跟人说话就会大量损耗电量，最好的合作是少说话只做事。", scores: { RLX: 3 } },
+          { text: "D. 重构自己：自己一个人就是一个team，不需要别人插手。", scores: { ICAN: 3 } }
+        ]
+      },
+      {
+        id: 16,
+        question: "📝 Q16｜你对“加班”",
+        options: [
+          { text: "A. 可以：‘收到老板，马上安排！’不需要理由，任务就是我的兴奋剂。", scores: { MMMM: 3 } },
+          { text: "B. 看情况：看加班费够不够支付我的精神损失费。", scores: { WRKR: 3 } },
+          { text: "C. 反感：严重超负荷，精神电量彻底归零，内心深处已经超度了老板一万遍。", scores: { RLX: 3 } },
+          { text: "D. 默认：在办公室优雅地加班，顺手演一出‘为公司奉献’的情绪大戏。", scores: { FAKE: 3 } }
+        ]
+      },
+      {
+        id: 17,
+        question: "📝 Q17｜你对职业变化",
+        options: [
+          { text: "A. 接受：指令变了就执行新指令，无脑自适应是我的底层算法。", scores: { MMMM: 3 } },
+          { text: "B. 焦虑：只要有一丁点风吹草动，脑中已模拟好行业崩溃后的惨状。", scores: { HOPE: 3 } },
+          { text: "C. 逃避：拒绝面对，换个标签页去研究‘午餐肉可以晚上吃吗’来分散注意力。", scores: { ADHD: 3 } },
+          { text: "D. 模拟未来：身体在老老实实开会，意识早已开始寻找下一个隐秘的备胎岗位。", scores: { WRKR: 3 } }
+        ]
+      },
+      {
+        id: 18,
+        question: "📝 Q18｜被问“为什么离职”",
+        options: [
+          { text: "A. 实话：“因为我真的干不下去了，只想回家躺着做个植物人。”", scores: { RLX: 3 } },
+          { text: "B. 包装：装出极其真诚的学术腔调，说一些‘为了寻找更宽广的生态闭环’。", scores: { FAKE: 3 } },
+          { text: "C. 编故事：把原本琐碎平淡的前司经历渲染成一场惊天动地的商战。", scores: { FAKE: 3 } },
+          { text: "D. 反问世界：‘高维度的灵魂，难道必须要被拘泥于这种低俗问题吗？’", scores: { YTX: 3 } }
+        ]
+      },
+      {
+        id: 19,
+        question: "📝 Q19｜你对面试官",
+        options: [
+          { text: "A. 对话：像乖巧的学生等待老师判分，极力表现出极佳 of 驯服度。", scores: { MMMM: 3 } },
+          { text: "B. 表演：实时抓取对方的神态喜好，零延迟加载对应的反馈。", scores: { FAKE: 3 } },
+          { text: "C. 防御：抱着极大的警惕，多一句话都不肯多说，随时准备隐身跑路。", scores: { NBY: 3 } },
+          { text: "D. 观察系统：盯着面试官头顶上那根正在稀疏的头发，思索他是不是要谢顶。", scores: { ADHD: 3 } }
+        ]
+      },
+      {
+        id: 20,
+        question: "📝 Q20｜你找工作的节奏",
+        options: [
+          { text: "A. 稳定：固定每天投几个，像一个在数字沙滩上机械挥铲的挖沙人。", scores: { MMMM: 3 } },
+          { text: "B. 随缘：心情好就点开看看，不好就连续三天不看，坚信一切自有天意安排。", scores: { RLX: 3 } },
+          { text: "C. 崩溃式：焦虑爆发时大哭一场，投递完简历后在脑中把自己判了无期徒刑。", scores: { HOPE: 3 } },
+          { text: "D. 间歇性努力：今天疯狂修改简历50次，明天由于大脑过载直接深度睡眠18小时。", scores: { ADHD: 3 } }
+        ]
+      },
+      {
+        id: 21,
+        question: "📝 Q21｜你对失败",
+        options: [
+          { text: "A. 接受：世事本无常，随缘。", scores: { RLX: 3 } },
+          { text: "B. 复盘：用我八面玲珑的技术矩阵，冷静剖析到底是哪个环节出了纰漏。", scores: { ICAN: 3 } },
+          { text: "C. 逃避：在失败降临前，主动拉黑hr，实现抢跑隐身。", scores: { NBY: 3 } },
+          { text: "D. 预演：在还没去面试前，就已经在脑中体验过五次落榜带来的宿命悲伤。", scores: { HOPE: 3 } }
+        ]
+      },
+      {
+        id: 22,
+        question: "📝 Q22｜你对成功",
+        options: [
+          { text: "A. 想要：等我成功赚到足够的赎身金，我就能获得真正的自由。", scores: { WRKR: 3 } },
+          { text: "B. 不确定：离成功越近，反而越想退缩，完美主义焦虑症随时发作。", scores: { NBY: 3 } },
+          { text: "C. 怀疑：世俗意义的成功真的是成功吗？难道不是套在牛马脖子上的金项圈？", scores: { RLX: 3 } },
+          { text: "D. 不信：好运肯定跟我绝缘，就算拿到成功肯定也是假象。", scores: { HOPE: 3 } }
+        ]
+      },
+      {
+        id: 23,
+        question: "📝 Q23｜情绪大崩溃选择？",
+        options: [
+          { text: "我已力竭", scores: { WRKR: 3, MMMM: 1, ICAN: 1 } },
+          { text: "我已无助", scores: { HOPE: 3, NBY: 1 } },
+          { text: "我已求佛", scores: { RLX: 3, YTX: 1 } },
+          { text: "我已三十六计走为上", scores: { ADHD: 3, RSMZ: 1, FAKE: 1 } }
+        ]
+      },
+      {
+        id: 24,
+        question: "📝 Q24｜你对竞争",
+        options: [
+          { text: "A. 正常：适者生存。", scores: { MMMM: 3 } },
+          { text: "B. 压力：一看到竞争就浑身冰冷，脑补自己秒成渣的画面。", scores: { HOPE: 3 } },
+          { text: "C. 逃避：直接退出战场，‘你们卷吧，我先去山里当野人了’。", scores: { RLX: 3 } },
+          { text: "D. 观察：静观其变，思绪再次神游到 ‘如果竞争对手和狗互换灵魂会怎样’。", scores: { ADHD: 3 } }
+        ]
+      },
+      {
+        id: 25,
+        question: "📝 Q25｜你对自身能力评价",
+        options: [
+          { text: "A. 还行：作为被指令喂养的一台合格执行器，我能出色完成日常工作。", scores: { MMMM: 3 } },
+          { text: "B. 一般：在生命规律面前，我懂的那些资源不算什么。", scores: { RLX: 3 } },
+          { text: "C. 不确定：越想越怀疑，明天出门我甚至可能连走路都先迈哪只脚都搞不清了。", scores: { HOPE: 3 } },
+          { text: "D. 被低估：我脑中的智慧和学历背景如此优秀，当前的岗位根本不配拥有我。", scores: { YTX: 3 } }
+        ]
+      },
+      {
+        id: 26,
+        question: "📝 Q26｜你对HR沟通",
+        options: [
+          { text: "A. 正常：礼貌、客套、公式化，不带一点多余的主观动机。", scores: { MMMM: 3 } },
+          { text: "B. 谨慎：保持微妙 of 防备距离，怕太热情了显得我没人要，冷淡了又怕错失机会。", scores: { NBY: 3 } },
+          { text: "C. 害怕：看到对方发‘在吗’，心跳瞬间飙到180，仿佛班主任发成绩单的前夕。", scores: { HOPE: 3 } },
+          { text: "D. 积极应答：根据HR的常用词，熟练生成模板型回复’。", scores: { FAKE: 3 } }
+        ]
+      },
+      {
+        id: 27,
+        question: "📝 Q27｜你对职业路径",
+        options: [
+          { text: "A. 清晰：一辈子只要有人不断向我扔任务，我就能安全、平稳地运行下去。", scores: { MMMM: 3 } },
+          { text: "B. 模糊: 看天吃饭，随缘前行，没有规划就是我人生唯一的终极规划。", scores: { RLX: 3 } },
+          { text: "C. 崩坏：我的职业航线随时可能触礁搁浅，未来就是一片废墟与黑洞。", scores: { HOPE: 3 } },
+          { text: "D. 重构中：多线发展，在策划、技术、杂务中不断转换形态，实现自我重塑。", scores: { ICAN: 3 } }
+        ]
+      },
+      {
+        id: 28,
+        question: "📝 Q28｜你对“喜欢的工作”",
+        options: [
+          { text: "A. 有：那个工作就是能让我踏踏实实拿工资，指令清晰，绝不让我在繁重的竞争里感到舒心。", scores: { MMMM: 3 } },
+          { text: "B. 不确定：若隐若现，偶尔觉得喜欢，一旦真的做上了我就恨不得马上隐形。", scores: { NBY: 3 } },
+          { text: "C. 没想过：没有欲望就没有伤害，工作只是三次元历练，不配占用我高贵的喜爱。", scores: { RLX: 3 } },
+          { text: "D. 不存在：工作和喜欢是反义词，世上没有任何一个工位能让我在繁重的竞争里感到舒心。", scores: { HOPE: 3 } }
+        ]
+      },
+      {
+        id: 29,
+        question: "📝 Q29｜你对未来一年的真实态度？",
+        options: [
+          { text: "A. 计划：老老实实在螺丝钉岗位上尽职尽责，安稳度过。", scores: { MMMM: 3 } },
+          { text: "B. 迷茫：得过且过，躺平也是赢。", scores: { RLX: 3 } },
+          { text: "C. 恐惧：预感会遭遇一系列系统级浩劫。", scores: { HOPE: 3 } },
+          { text: "D. 观察：静观世界大局变化，脑子不停在分裂狂欢。", scores: { ADHD: 3 } }
+        ]
+      },
+      {
+        id: 30,
+        question: "📝 Q30｜你对工资",
+        options: [
+          { text: "A. 重要：谁会跟钱过不去呢。", scores: { WRKR: 3 } },
+          { text: "B. 一般：够正常生活就好，钱多了就该被迫承担更多责任了。", scores: { RLX: 3 } },
+          { text: "C. 无所谓：对世俗成功没执念，不买奢侈品不参与竞争，无欲无求。", scores: { RLX: 3 } },
+          { text: "D. 虚构概念：优雅的灵魂对庸俗 of 纸币并无好感，但市场逼着我用它装点身段。", scores: { YTX: 3 } }
+        ]
+      },
+      {
+        id: 31,
+        question: "🔮 Q31｜直觉盲选题：闭上眼，在以下四个毫无逻辑关联 of 抽象符号中凭首感盲选一个：",
+        options: [
+          { text: "🕳️ ", scores: { HOPE: 3, NBY: 1 } },
+          { text: "🧬 ", scores: { FAKE: 3, ICAN: 1 } },
+          { text: "🔌 ", scores: { RLX: 3, ADHD: 1 } },
+          { text: "🧱 ", scores: { MMMM: 3, WRKR: 1 } }
+        ]
+      },
+      {
+        id: 32,
+        question: "📝 Q32｜你对现在状态",
+        options: [
+          { text: "A. 可控：网络状态 stable 运行，我是一台合格的执行器。", scores: { MMMM: 3 } },
+          { text: "B. 一般：得过且过，心静自然凉，电量虽然只剩3% but 能一直维持生命体征。", scores: { RLX: 3 } },
+          { text: "C. 混乱：脑内标签页已经堆到了200个，双手却还在工位上擦桌子。", scores: { ADHD: 3 } },
+          { text: "D. 运行中：情绪皮肤渲染正常，微笑营业中。", scores: { FAKE: 3 } }
+        ]
+      }
+    ];
+
+    // 补充后续的人格十五维指纹结构 (完全拼装闭合)
+    const DIMENSIONS_MAP = {
+      ICAN: [
+        { group: "自我模型", code: "S1", name: "自尊自信", status: "H", desc: "技能多，信心足，但在找准发力点上容易纠结。" },
+        { group: "自我模型", code: "S2", name: "自我清晰度", status: "M", desc: "清楚能力，但不清楚该把哪一版自己推上黄金货架。" },
+        { group: "自我模型", code: "S3", name: "核心价值", status: "H", desc: "核心价值是万物皆学、八面玲珑。" },
+        { group: "情感模型", code: "E1", name: "依恋安全感", status: "M", desc: "靠复合技能筑底，不轻易陷入依赖困境。" },
+        { group: "情感模型", code: "E2", name: "情感投入度", status: "H", desc: "投入的是学习和试错，对过程抱有极大信念。" },
+        { group: "情感模型", code: "E3", name: "边界与依赖", status: "M", desc: "合作能打，单干能扛，能完美消化复杂需求。" },
+        { group: "态度模型", code: "A1", name: "世界观倾向", status: "H", desc: "深信只要技多就不压身，纵有风浪也能自适应。" },
+        { group: "态度模型", code: "A2", name: "规则与灵活度", status: "H", desc: "极度灵活，可根据任务环境秒变形状。" },
+        { group: "态度模型", code: "A3", name: "人生意义感", status: "M", desc: "追求面面俱到，虽然偶尔因不够尖锐而焦虑。" },
+        { group: "行动驱力模型", code: "Ac1", name: "动机导向", status: "H", desc: "自我成长和攻克未知技能是核心驱动源。" },
+        { group: "行动驱力模型", code: "Ac2", name: "决策风格", status: "M", desc: "全面权衡，偶尔落入选择多态性泥潭。" },
+        { group: "行动驱力模型", code: "Ac3", name: "执行模式", status: "H", desc: "执行极高，能迅速出方案、跑通闭环流程。" },
+        { group: "社交模型", code: "So1", name: "社交主动性", status: "M", desc: "积极配合各种跨界社交与协同分工。" },
+        { group: "社交模型", code: "So2", name: "人际边界感", status: "M", desc: "边界清晰度中等，承压负荷极重。" },
+        { group: "社交模型", code: "So3", name: "表达与真实度", status: "M", desc: "表达流畅专业，但容易模糊一句话重点。" }
+      ],
+      WRKR: [
+        { group: "自我模型", code: "S1", name: "自尊自信", status: "M", desc: "已经就业，证明能运行，但不知道为什么还想跑。" },
+        { group: "自我模型", code: "S2", name: "自我清晰度", status: "M", desc: "知道自己人在工位，不确定心在哪片草原。" },
+        { group: "自我模型", code: "S3", name: "核心价值", status: "M", desc: "想稳定，也想自由。" },
+        { group: "情感模型", code: "E1", name: "依恋安全感", status: "M", desc: "有工资就有安全感，但不多。" },
+        { group: "情感模型", code: "E2", name: "情感投入度", status: "L", desc: "身体打卡，灵魂请假。" },
+        { group: "情感模型", code: "E3", name: "边界与依赖", status: "M", desc: "能维持关系，但不想被工作完全拥有。" },
+        { group: "态度模型", code: "A1", name: "世界观倾向", status: "M", desc: "相信工作必要，但不相信工作神圣。" },
+        { group: "态度模型", code: "A2", name: "规则与灵活度", status: "H", desc: "流程能走，班能上，心能飘。" },
+        { group: "态度模型", code: "A3", name: "人生意义感", status: "L", desc: "意义感经常在周一早上离线。" },
+        { group: "行动驱力模型", code: "Ac1", name: "动机导向", status: "M", desc: "被现实推动，不是被热爱点燃。" },
+        { group: "行动驱力模型", code: "Ac2", name: "决策风格", status: "M", desc: "每天想辞职，每天正常上班。" },
+        { group: "行动驱力模型", code: "Ac3", name: "执行模式", status: "H", desc: "该交的活会交，该碎的心也会碎。" },
+        { group: "社交模型", code: "So1", name: "社交主动性", status: "M", desc: "职场社交能应付，下班后失联。" },
+        { group: "社交模型", code: "So2", name: "人际边界感", status: "H", desc: "工作是工作，我是我。" },
+        { group: "社交模型", code: "So3", name: "表达与真实度", status: "M", desc: "嘴上“好的”，眼神已经去了远方。" }
+      ]
+    };
+
+    // 挂载缺失的 dimensions 补偿
+    Object.keys(PERSONALITIES).forEach(key => {
+      if (!PERSONALITIES[key].fifteenDimensions) {
+        PERSONALITIES[key].fifteenDimensions = DIMENSIONS_MAP[key] || DIMENSIONS_MAP.ICAN;
+      }
+    });
+
+    // 补充药丸
+    PERSONALITIES.HOPE.bg = "bg-pink-50/80 border-pink-100/50";
+    PERSONALITIES.HOPE.pillBg = "bg-pink-100 text-pink-700";
+    PERSONALITIES.NBY.bg = "bg-teal-50/80 border-teal-100/50";
+    PERSONALITIES.NBY.pillBg = "bg-teal-100 text-teal-700";
+    PERSONALITIES.YTX.bg = "bg-amber-50/80 border-amber-100/50";
+    PERSONALITIES.YTX.pillBg = "bg-amber-100 text-amber-700";
+    PERSONALITIES.WRKR.bg = "bg-rose-50/80 border-rose-100/50";
+    PERSONALITIES.WRKR.pillBg = "bg-rose-100 text-rose-700";
+    PERSONALITIES.RSMZ.bg = "bg-red-50/80 border-red-100/50";
+    PERSONALITIES.RSMZ.pillBg = "bg-red-100 text-red-700";
+
+    const DEFAULT_IMAGE_URL = "https://architectural-purple-fs0w6afr.edgeone.dev?eo_token=8fa61039754fb0a2ce5cf536e7b7d8d5&eo_time=1783251192";
+
+    // 自定义静态图片渲染组件
+    const AIGeneratedAvatar = ({ item, isModal = false }) => {
+      const imageUrl = item.imageUrl || DEFAULT_IMAGE_URL;
+
+      return (
+        <img
+          src={imageUrl}
+          alt={item.name}
+          className="w-full h-full object-cover select-none shrink-0"
+        />
+      );
+    };
+
+    // ==================== 主 App 核心渲染组件 ====================
+    function App() {
+      const [page, setPage] = useState('home'); // home, types, quiz, calculating, result, faq
+      
+      // 基于 32 题的选择题状态
+      const [userAnswers, setUserAnswers] = useState(() => Array(QUESTIONS.length).fill(null));
+
+      const [customName, setCustomName] = useState('');
+      const [selectedPersonalities, setSelectedPersonalities] = useState(null); // 查看人格图鉴弹窗
+      const [activeTab, setActiveTab] = useState('fingerprint'); 
+      const [copied, setCopied] = useState(false);
+
+      // 极简摸鱼金句
+      const funnyQuotes = [
+        "“面试是演员的诞生，上班是牛马的救赎。”",
+        "“只要我没有上进心，老板就没办法PUA我。”",
+        "“学历是我脱不下的长衫，工位是我离不开的棺材。”",
+        "“脑内出逃三千次，不如带薪拉屎十分钟。”",
+        "“简历就像美图秀秀，修得连我妈都不认识了。”"
+      ];
+
+      const currentQuote = useMemo(() => {
+        const seed = userAnswers.filter(x => x !== null).length;
+        return funnyQuotes[seed % funnyQuotes.length];
+      }, [userAnswers, page]);
+
+      // 已答题数
+      const answeredCount = useMemo(() => {
+        return userAnswers.filter(x => x !== null).length;
+      }, [userAnswers]);
+
+      // 进度百分比
+      const progressPercent = useMemo(() => {
+        return Math.round((answeredCount / QUESTIONS.length) * 100);
+      }, [answeredCount]);
+
+      const isAllAnswered = answeredCount === QUESTIONS.length;
+
+      const handleSelectOption = (questionIdx, optionIdx) => {
+        const updated = [...userAnswers];
+        updated[questionIdx] = optionIdx;
+        setUserAnswers(updated);
+      };
+
+      const scrollToNextUnanswered = () => {
+        const firstUnansweredIdx = userAnswers.findIndex(x => x === null);
+        if (firstUnansweredIdx !== -1) {
+          const element = document.getElementById(`question-card-${firstUnansweredIdx}`);
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }
+      };
+
+      const handleSubmitQuiz = () => {
+        if (!isAllAnswered) {
+          scrollToNextUnanswered();
+          return;
+        }
+
+        setPage('calculating');
+        setTimeout(() => {
+          setPage('result');
+        }, 2500);
+      };
+
+      // 测算积分
+      const finalScores = useMemo(() => {
+        const scores = {
+          FAKE: 0, MMMM: 0, ADHD: 0, ICAN: 0, HOPE: 0,
+          NBY: 0, YTX: 0, WRKR: 0, RSMZ: 0, RLX: 0
+        };
+
+        userAnswers.forEach((selectedOptIdx, qIdx) => {
+          if (selectedOptIdx !== null) {
+            const option = QUESTIONS[qIdx].options[selectedOptIdx];
+            Object.keys(option.scores).forEach(key => {
+              scores[key] = (scores[key] || 0) + (option.scores[key] || 0);
+            });
+          }
+        });
+
+        return scores;
+      }, [userAnswers]);
+
+      const handleRestart = () => {
+        setUserAnswers(Array(QUESTIONS.length).fill(null));
+        setPage('quiz');
+      };
+
+      // 测出最匹配结果
+      const resultType = useMemo(() => {
+        let maxType = 'RLX';
+        let maxVal = -1;
+        Object.keys(finalScores).forEach(key => {
+          if (finalScores[key] > maxVal) {
+            maxVal = finalScores[key];
+            maxType = key;
+          }
+        });
+        return PERSONALITIES[maxType] || PERSONALITIES.RLX;
+      }, [finalScores]);
+
+      // 第二匹配
+      const shadowType = useMemo(() => {
+        let sorted = Object.keys(finalScores).sort((a, b) => finalScores[b] - finalScores[a]);
+        let second = sorted[1] || 'RLX';
+        return PERSONALITIES[second] || PERSONALITIES.RLX;
+      }, [finalScores]);
+
+      const subMetrics = useMemo(() => {
+        return {
+          despairRate: Math.min(100, Math.round(((finalScores.HOPE * 2 + finalScores.WRKR + finalScores.NBY) / 18) * 100)),
+          mimicryRate: Math.min(100, Math.round(((finalScores.FAKE * 2.5 + finalScores.YTX) / 18) * 100)),
+          slackOffRate: Math.min(100, Math.round(((finalScores.ADHD * 2 + finalScores.WRKR + finalScores.RLX) / 18) * 100)),
+          wageSlavery: Math.min(100, Math.round(((finalScores.MMMM * 2.5 + finalScores.ICAN) / 18) * 100))
+        };
+      }, [finalScores]);
+
+      const handleCopy = () => {
+        const text = `【JBTI 职业行为测试结果】\n我是「${customName || '无名牛马'}」，我测出的主干求职人格是：\n🌟【${resultType.name}】—— ${resultType.subtitle}\n一起来测试属于你的当代打工人格！`;
+        const tempEl = document.createElement('textarea');
+        tempEl.value = text;
+        document.body.appendChild(tempEl);
+        tempEl.select();
+        document.execCommand('copy');
+        document.body.removeChild(tempEl);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      };
+
+      return (
+        <div className="min-h-screen bg-gradient-to-tr from-slate-50 via-slate-50 to-blue-50/50 text-slate-800 flex flex-col items-center justify-between font-sans selection:bg-blue-100 selection:text-blue-900 w-full overflow-x-hidden">
+          
+          {/* 顶部导航栏 */}
+          <nav className="w-full sticky top-0 bg-white/70 backdrop-blur-md border-b border-slate-100/80 py-4 px-6 flex justify-between items-center z-40 transition-all">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl cursor-pointer select-none" onClick={() => setPage('home')}>💼</span>
+              <div>
+                <h1 className="text-lg font-black tracking-tight text-slate-900 flex items-center gap-2 cursor-pointer" onClick={() => setPage('home')}>
+                  JBTI人格测试图鉴 <span className="text-[10px] bg-blue-100 text-blue-700 font-bold px-1.5 py-0.5 rounded">BETA</span>
+                </h1>
+                <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider hidden sm:block">Job-Behavioral Type Indicator</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1 sm:gap-4">
+              <button 
+                onClick={() => setPage('home')} 
+                className={`text-xs sm:text-sm font-bold px-3 py-1.5 rounded-lg transition-colors ${page === 'home' || page === 'quiz' || page === 'calculating' || page === 'result' ? 'text-blue-600 bg-blue-50/50' : 'text-slate-500 hover:text-slate-800'}`}
+              >
+                首页
+              </button>
+              <button 
+                onClick={() => setPage('types')} 
+                className={`text-xs sm:text-sm font-bold px-3 py-1.5 rounded-lg transition-colors ${page === 'types' ? 'text-blue-600 bg-blue-50/50' : 'text-slate-500 hover:text-slate-800'}`}
+              >
+                人格类型
+              </button>
+              <button 
+                onClick={() => setPage('faq')} 
+                className={`text-xs sm:text-sm font-bold px-3 py-1.5 rounded-lg transition-colors ${page === 'faq' ? 'text-blue-600 bg-blue-50/50' : 'text-slate-500 hover:text-slate-800'}`}
+              >
+                常见问题
+              </button>
+            </div>
+          </nav>
+
+          {/* 答题进度吸顶进度条 */}
+          {page === 'quiz' && (
+            <div className="w-full sticky top-[68px] bg-white/95 border-b border-blue-50 py-2.5 px-6 z-30 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5">
+                <span className="text-xs font-black text-slate-400 uppercase">答题进度</span>
+                <span className="text-xs font-extrabold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                  已完成 {answeredCount} / {QUESTIONS.length} 题
+                </span>
+              </div>
+              <div className="flex items-center gap-4 w-full sm:w-auto">
+                <div className="flex-1 sm:w-48 bg-slate-100 h-2 rounded-full overflow-hidden">
+                  <div 
+                    className="bg-gradient-to-r from-blue-400 to-blue-600 h-full rounded-full transition-all duration-300"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+                <span className="text-xs font-black text-slate-500">{progressPercent}%</span>
+              </div>
+            </div>
+          )}
+
+          {/* 主体卡片容器 */}
+          <main className="w-full max-w-4xl px-4 py-8 flex-1 flex flex-col justify-center">
+            
+            {/* ==================== 首页 (纯净无图鉴) ==================== */}
+            {page === 'home' && (
+              <div className="space-y-12 animate-fade-in">
+                <div className="bg-white rounded-3xl p-8 md:p-12 border border-slate-100/80 shadow-sm text-center relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-b from-blue-50/20 to-transparent -z-10 pointer-events-none" />
+                  
+                  <div className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-xs font-bold mb-6">
+                    <span>⚡</span> 永久免费 · 32道求职人格测试
+                  </div>
+                  
+                  <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight text-slate-900 mb-4 leading-tight">
+                    JBTI 人格测试图鉴<span className="text-blue-500 underline decoration-wavy decoration-2 underline-offset-4">jbti</span>
+                  </h1>
+                  
+                  <p className="max-w-xl mx-auto text-sm md:text-base text-slate-500 leading-relaxed font-medium mb-8">
+                    免费在线完成 32道 JBTI 人格测试题，快速查看你求职人格类型、性格倾向 and 趣味解析。
+                  </p>
+
+                  {/* 昵称输入 + 启动按钮 */}
+                  <div className="max-w-md mx-auto space-y-4">
+                    <input
+                      type="text"
+                      placeholder="输入你的代号（如：无情的PPT搬运工）"
+                      value={customName}
+                      onChange={(e) => setCustomName(e.target.value.slice(0, 15))}
+                      className="w-full px-5 py-4 text-center rounded-2xl border border-slate-200 bg-slate-50 focus:bg-white text-base font-bold placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+                    />
+                    <button
+                      onClick={() => {
+                        if (!customName.trim()) setCustomName("无名牛马");
+                        setPage('quiz');
+                      }}
+                      className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-base font-extrabold shadow-md hover:shadow-lg transition-all transform hover:-translate-y-0.5"
+                    >
+                      开始测试 🚀
+                    </button>
+                  </div>
+
+                  <p className="text-[11px] text-slate-400 font-bold mt-6">
+                    祝大家都能收到满意的offer！
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* ==================== 人格类型专属页 (直接跳转，高保真 3:4 竖向精美卡片展示框) ==================== */}
+            {page === 'types' && (
+              <div className="space-y-10 animate-fade-in">
+                <div className="bg-white rounded-3xl p-8 md:p-12 border border-slate-100 shadow-sm text-center relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-b from-blue-50/10 to-transparent -z-10 pointer-events-none" />
+                  
+                  <div className="inline-flex items-center bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-xs font-bold mb-6">
+                    JBTI 人格测试
+                  </div>
+                  
+                  <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-slate-900 mb-4">
+                    10 种 JBTI 人格类型总览
+                  </h1>
+                  
+                  <p className="max-w-xl mx-auto text-sm text-slate-500 leading-relaxed font-medium mb-8">
+                    这里收录了全部 JBTI 结果类型。点击任意卡片查看完整解读 and 十五维度分析。
+                  </p>
+
+                  {/* 统一的蓝色开始测试按钮 */}
+                  <button
+                    onClick={() => setPage('home')}
+                    className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl text-sm transition-all shadow-sm hover:shadow-md"
+                  >
+                    开始测试
+                  </button>
+                </div>
+
+                <div className="space-y-1">
+                  <h2 className="text-xl font-black text-slate-900">全部人格图鉴</h2>
+                  <p className="text-xs text-slate-400 font-bold">共 10 种人格，点击卡片查看详情。</p>
+                </div>
+
+                {/* 10 个人格图鉴的 3:4 圆角高精大卡片 */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                  {Object.values(PERSONALITIES).map((p) => (
+                    <div
+                      key={p.id}
+                      onClick={() => setSelectedPersonalities(p)}
+                      className="bg-white rounded-[28px] border border-slate-100/90 hover:border-blue-200 shadow-sm hover:shadow-md cursor-pointer transition-all overflow-hidden flex flex-col group text-center animate-fade-in"
+                    >
+                      {/* 上半部分：纯净轻量色彩层，去掉所有多余标题文字，纯放高精拉长大图框 */}
+                      <div className={`p-4 flex items-center justify-center ${p.bg || 'bg-slate-50/60'} h-[230px] sm:h-[260px] transition-colors group-hover:bg-opacity-80`}>
+                        <div className="w-28 h-36 sm:w-36 sm:h-48 overflow-hidden rounded-2xl shadow-[0_8px_20px_rgba(0,0,0,0.06)] border border-white flex items-center justify-center bg-white transform group-hover:scale-[1.03] transition-transform duration-300">
+                          <AIGeneratedAvatar item={p} isModal={false} />
+                        </div>
+                      </div>
+
+                      {/* 下半部分：白底文字信息 */}
+                      <div className="bg-white p-4 pt-5 pb-5 flex flex-col items-center justify-center gap-2 border-t border-slate-100/50">
+                        <span className={`text-[10px] font-black px-3 py-0.5 rounded-full uppercase tracking-wider ${p.pillBg || 'bg-blue-100 text-blue-700'}`}>
+                          {p.code}
+                        </span>
+                        <h4 className="text-sm font-black text-slate-800 mt-1">{p.titleName}</h4>
+                        <p className="text-[11px] text-slate-400 font-bold line-clamp-1 italic px-1 mt-0.5">
+                          {p.subtitle}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* ==================== 答题页 (32题全量平铺) ==================== */}
+            {page === 'quiz' && (
+              <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
+                <div className="bg-blue-50/50 border border-blue-100 p-4 rounded-2xl text-xs text-blue-700 leading-relaxed font-semibold text-center">
+                  💡 请在下方选择。点击即可选择或更改，完成所有 32 道题目后，即可提交获取你的专属 JBTI 报告。
+                </div>
+
+                <div className="space-y-6">
+                  {QUESTIONS.map((q, qIdx) => {
+                    const selectedOptIdx = userAnswers[qIdx];
+                    const isIntuitive = q.question.startsWith("🔮");
+                    return (
+                      <div
+                        key={q.id}
+                        id={`question-card-${qIdx}`}
+                        className={`bg-white rounded-3xl p-6 md:p-8 border shadow-sm transition-all duration-300 ${
+                          selectedOptIdx !== null 
+                            ? 'border-blue-100 shadow-[0_4px_20px_-4px_rgba(59,130,246,0.06)]' 
+                            : 'border-slate-100/80 hover:border-slate-200'
+                        }`}
+                      >
+                        <div className="flex justify-between items-center mb-4">
+                          <span className={`text-[11px] font-extrabold px-2.5 py-1 rounded-full uppercase tracking-wider ${
+                            isIntuitive ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-500'
+                          }`}>
+                            {isIntuitive ? "✨ 潜意识选择" : `第 ${qIdx + 1} 题`}
+                          </span>
+                          {selectedOptIdx !== null && (
+                            <span className="text-[11px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded font-black flex items-center gap-1 animate-scale-up">
+                              ✓ 已选择
+                            </span>
+                          )}
+                        </div>
+
+                        <h3 className="text-base md:text-lg font-extrabold text-slate-900 leading-relaxed mb-6">
+                          {q.question}
+                        </h3>
+
+                        <div className="space-y-3">
+                          {q.options.map((option, optIdx) => {
+                            const isSelected = selectedOptIdx === optIdx;
+                            return (
+                              <div
+                                key={optIdx}
+                                onClick={() => handleSelectOption(qIdx, optIdx)}
+                                className={`w-full text-left p-4 rounded-xl border transition-all duration-150 flex items-start gap-4 cursor-pointer text-sm font-medium ${
+                                  isSelected
+                                    ? 'border-blue-500 bg-blue-50/50 text-blue-900 shadow-sm'
+                                    : 'border-slate-150 hover:border-slate-300 bg-slate-50/30 hover:bg-slate-50/80 text-slate-600'
+                                }`}
+                              >
+                                <div className="pt-0.5 shrink-0">
+                                  <div className={`w-5 h-5 rounded-full border flex items-center justify-center transition-all ${
+                                    isSelected 
+                                      ? 'border-blue-600 bg-blue-600 text-white scale-105' 
+                                      : 'border-slate-300 bg-white'
+                                  }`}>
+                                    {isSelected && (
+                                      <div className="w-1.5 h-1.5 rounded-full bg-white animate-scale-up" />
+                                    )}
+                                  </div>
+                                </div>
+                                <span className="leading-relaxed">{option.text}</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* 底栏动作条 */}
+                <div className="bg-white/90 backdrop-blur border border-slate-100 rounded-3xl p-6 shadow-md flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-center sm:text-left">
+                    <p className="text-sm font-bold text-slate-800">
+                      {isAllAnswered ? "🎉 太棒了，全部题目已作答完毕！" : `📝 还有 ${QUESTIONS.length - answeredCount} 道题未作答`}
+                    </p>
+                    <p className="text-xs text-slate-400 mt-1 italic">“{currentQuote}”</p>
+                  </div>
+
+                  <div className="flex gap-3 w-full sm:w-auto">
+                    <button
+                      onClick={() => {
+                        const firstUnansweredIdx = userAnswers.findIndex(x => x === null);
+                        if (firstUnansweredIdx !== -1) {
+                          scrollToNextUnanswered();
+                        } else {
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                      }}
+                      className="px-4 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold rounded-2xl text-xs transition-all flex items-center gap-1 shrink-0"
+                    >
+                      ↩️ 找未答题 / 返回顶部
+                    </button>
+
+                    <button
+                      onClick={handleSubmitQuiz}
+                      className={`flex-1 sm:flex-initial px-8 py-3.5 rounded-2xl text-xs font-black transition-all shadow-md ${
+                        isAllAnswered
+                          ? 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-lg hover:-translate-y-0.5'
+                          : 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                      }`}
+                    >
+                      🚀 提交测算，生成报告
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ==================== 正在计算页 ==================== */}
+            {page === 'calculating' && (
+              <div className="max-w-md mx-auto text-center py-16 animate-pulse">
+                <div className="text-6xl animate-spin mb-6 text-blue-500">🌀</div>
+                <h2 className="text-xl font-black text-slate-900 mb-2">正在测算你的职场人格DNA...</h2>
+                <p className="text-xs text-slate-400 font-bold mb-6">正在计算并汇总数据图谱</p>
+                <div className="w-48 bg-slate-100 h-1.5 rounded-full mx-auto overflow-hidden">
+                  <div className="bg-blue-600 h-full w-full animate-loading-bar rounded-full"></div>
+                </div>
+              </div>
+            )}
+
+            {/* ==================== 结果报告页 ==================== */}
+            {page === 'result' && (
+              <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
+                <div className="bg-white rounded-3xl p-6 md:p-10 border border-slate-100 shadow-sm relative overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-blue-500" />
+
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-slate-100 pb-6 mb-6 gap-4">
+                    <div>
+                      <span className="text-[10px] bg-blue-50 text-blue-600 font-bold px-2 py-1 rounded-full uppercase tracking-wider">
+                        JBTI Official Report
+                      </span>
+                      <h3 className="text-xl font-black text-slate-900 mt-2">
+                        测试者：<span className="text-blue-600 underline decoration-wavy underline-offset-4">{customName || "无名牛马"}</span>
+                      </h3>
+                    </div>
+                    <div className="text-left sm:text-right">
+                      <div className="text-[10px] text-slate-400 font-bold">测定日期 / DATE</div>
+                      <div className="text-sm font-bold text-slate-700">2026.07.05</div>
+                    </div>
+                  </div>
+
+                  {/* 人格大类头部 (AI 3:4 竖图展示框比例) */}
+                  <div className="flex items-start gap-4 sm:gap-6 mb-8">
+                    <div className="w-24 h-32 sm:w-36 sm:h-48 overflow-hidden rounded-2xl shrink-0 shadow-md">
+                      <AIGeneratedAvatar item={resultType} isModal={true} />
+                    </div>
+                    <div>
+                      <div className="text-xs text-blue-500 font-bold tracking-widest">{resultType.code}</div>
+                      <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mt-1">{resultType.name}</h1>
+                      <p className="text-xs sm:text-sm text-slate-400 font-bold italic mt-1.5">“{resultType.subtitle}”</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-3 mb-8">
+                    <h3 className="text-sm font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                      <span>📄</span> 人格速写 / Sketch
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-500 leading-relaxed bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-100/60">
+                      {resultType.description}
+                    </p>
+                  </div>
+
+                  <div className="flex justify-between items-center text-xs font-bold bg-slate-50 border border-slate-100 p-3 rounded-xl mb-8">
+                    <span className="text-slate-400">🕵️ 潜意识影子人格：</span>
+                    <span className="text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
+                      {shadowType.name}
+                    </span>
+                  </div>
+
+                  {/* Tab 页签 */}
+                  <div className="flex border-b border-slate-100 mb-6">
+                    <button
+                      onClick={() => setActiveTab('fingerprint')}
+                      className={`flex-1 pb-3 text-center text-xs font-bold transition-all relative ${activeTab === 'fingerprint' ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                      指纹特征
+                      {activeTab === 'fingerprint' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />}
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('survival')}
+                      className={`flex-1 pb-3 text-center text-xs font-bold transition-all relative ${activeTab === 'survival' ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                      生存指南
+                      {activeTab === 'survival' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />}
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('buzzword')}
+                      className={`flex-1 pb-3 text-center text-xs font-bold transition-all relative ${activeTab === 'buzzword' ? 'text-blue-600' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                      黑话辞典
+                      {activeTab === 'buzzword' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-500" />}
+                    </button>
+                  </div>
+
+                  {/* 十五维指纹精细列表 */}
+                  <div className="min-h-[200px]">
+                    {activeTab === 'fingerprint' && (
+                      <div className="space-y-4">
+                        <h4 className="text-xs font-black text-slate-500 mb-4">{resultType.name} 的十五维人格指纹测定值：</h4>
+                        <div className="space-y-3.5">
+                          {resultType.fifteenDimensions && resultType.fifteenDimensions.map((item, idx) => (
+                            <div key={idx} className="border border-slate-100/80 p-4 rounded-2xl bg-white flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-[0_2px_8px_-1px_rgba(0,0,0,0.02)]">
+                              <div className="flex items-center justify-between md:justify-start gap-4 shrink-0 md:w-56">
+                                <div className="text-left">
+                                  <span className="text-[10px] text-slate-400 font-bold block uppercase tracking-wider">
+                                    {item.group}
+                                  </span>
+                                  <span className="text-xs font-black text-slate-700 mt-0.5 block">
+                                    {item.code} {item.name}
+                                  </span>
+                                </div>
+                              </div>
+                              
+                              <div className="flex items-center gap-3 w-full">
+                                <span className={`font-black text-xs w-6 h-6 rounded-full flex items-center justify-center border shrink-0 ${
+                                  item.status === 'H' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                  item.status === 'M' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                                  'bg-slate-50 text-slate-500 border-slate-100'
+                                }`}>
+                                  {item.status}
+                                </span>
+                                <p className="text-xs font-semibold text-slate-500 leading-relaxed">{item.desc}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {activeTab === 'survival' && (
+                      <div className="space-y-4">
+                        {resultType.survivalGuide && (
+                          <div className="p-4 bg-emerald-50/50 border border-emerald-100 rounded-2xl">
+                            <h4 className="text-xs font-extrabold text-emerald-800 mb-2">💡 职场电量自我净化：</h4>
+                            <p className="text-xs sm:text-sm text-emerald-950 leading-relaxed">{resultType.survivalGuide}</p>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="p-3.5 bg-slate-50 border border-slate-100 rounded-xl text-center">
+                            <span className="text-[10px] text-slate-400 font-bold block mb-1">🤝 推荐抱大腿人格</span>
+                            <span className="text-xs font-bold text-slate-800">{resultType.compatibility.like}</span>
+                          </div>
+                          <div className="p-3.5 bg-slate-50 border border-slate-100 rounded-xl text-center">
+                            <span className="text-[10px] text-slate-400 font-bold block mb-1">⚠️ 建议物理隔离人格</span>
+                            <span className="text-xs font-bold text-slate-800">{resultType.compatibility.dislike}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {activeTab === 'buzzword' && (
+                      <div className="space-y-3">
+                        <div className="p-3 bg-blue-50/40 border border-blue-100/50 rounded-xl">
+                          <span className="text-xs font-bold text-blue-800">黑话 A：“这个事情由你来牵头。”</span>
+                          <p className="text-[11px] text-slate-500 mt-1">💡 直白翻译：这口锅已经洗好了，现在扣在你的头上。</p>
+                        </div>
+                        <div className="p-3 bg-blue-50/40 border border-blue-100/50 rounded-xl">
+                          <span className="text-xs font-bold text-blue-800">黑话 B：“公司是扁平化管理。”</span>
+                          <p className="text-[11px] text-slate-500 mt-1">💡 直白翻译：没有多余预算，你一个人要负责三个部门 Walton 的杂活。</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    onClick={handleCopy}
+                    className="py-4 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-2xl text-sm transition-all shadow-sm hover:shadow-md"
+                  >
+                    {copied ? "已复制！" : "复制诊断并分享成果 📋"}
+                  </button>
+                  <button
+                    onClick={handleRestart}
+                    className="py-4 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-extrabold rounded-2xl text-sm transition-all"
+                  >
+                    重新测试 🔄
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ==================== 常见问题 (FAQ) ==================== */}
+            {page === 'faq' && (
+              <div className="max-w-2xl mx-auto bg-white rounded-3xl p-8 border border-slate-100 shadow-sm space-y-6 animate-fade-in">
+                <div className="text-center pb-4 border-b border-slate-100">
+                  <h2 className="text-2xl font-black text-slate-900">常见问题 FAQ</h2>
+                  <p className="text-xs text-slate-400 mt-1">你想知道但HR绝不会告诉你的小秘密</p>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-1.5">
+                    <h4 className="text-sm font-extrabold text-slate-800">Q：JBTI 是什么？</h4>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      A：JBTI 是 Job-Behavioral Type Indicator（职场行为类型指标）的缩写，专门为当代打工人在求职和工作中的真实心态、摸鱼状态与情感挣扎设计的趣味人格分类系统。
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <h4 className="text-sm font-extrabold text-slate-800">Q：JBTI 和 MBTI 有什么区别？</h4>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      A：经典的 MBTI 偏向于理想化的性格 analysis（如你是否喜欢社交、规划等）；而 JBTI 是纯粹为“打工生活”定制的。它不问你理想，只问你简历改了几次、收到已读不回时的内心磁场，是极具地气的职场真实映射。
+                    </p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <h4 className="text-sm font-extrabold text-slate-800">Q：JBTI 测试结果准吗？有科学依据吗？</h4>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      A：虽然我们的算法基于精密的 15 维打工指纹指标（包含自我、情感、态度、行驱、社交），按科学配比测算，但它更偏向于提供一种“职场情绪价值”与释放焦虑。如果你觉得极准，那是因为它戳中了你平时藏在精装面具下的真实灵魂！
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setPage('home')}
+                  className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-all"
+                >
+                  返回首页
+                </button>
+              </div>
+            )}
+
+          </main>
+
+          {/* 人格详细内容弹窗 (移动端采用现代底部抽屉Drawer滑出排版，大屏保留经典居中面板，大图完美自适应 3:4) */}
+          {selectedPersonalities && (
+            <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 animate-fade-in">
+              <div className="bg-white rounded-t-3xl sm:rounded-3xl max-w-2xl w-full p-5 sm:p-8 border border-slate-100 shadow-xl relative max-h-[85vh] sm:max-h-[90vh] overflow-y-auto">
+                
+                <button
+                  onClick={() => setSelectedPersonalities(null)}
+                  className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 font-extrabold text-lg bg-slate-50 hover:bg-slate-100 w-8 h-8 rounded-full flex items-center justify-center transition-all"
+                >
+                  ×
+                </button>
+
+                <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 mb-5 border-b border-slate-100 pb-4 text-center sm:text-left">
+                  <div className="w-24 h-32 sm:w-36 sm:h-48 overflow-hidden rounded-2xl shrink-0 shadow-sm flex items-center justify-center">
+                    <AIGeneratedAvatar item={selectedPersonalities} isModal={true} />
+                  </div>
+                  <div className="flex flex-col justify-center mt-1 sm:mt-0">
+                    <div className="text-[10px] text-blue-500 font-bold tracking-widest">{selectedPersonalities.code}</div>
+                    <h3 className="text-lg sm:text-xl font-black text-slate-900 mt-1">{selectedPersonalities.name}</h3>
+                    <p className="text-xs text-slate-400 italic mt-1">“{selectedPersonalities.subtitle}”</p>
+                  </div>
+                </div>
+
+                <div className="space-y-5">
+                  <div className="bg-slate-50 p-4 rounded-xl border border-slate-100/50 text-xs text-slate-500 leading-relaxed text-left">
+                    {selectedPersonalities.description}
+                  </div>
+
+                  <div className="space-y-2.5 text-left">
+                    <span className="text-[10px] font-bold text-slate-400 block uppercase tracking-wider">十五维核心指纹 analysis：</span>
+                    <div className="max-h-[300px] overflow-y-auto space-y-2.5 pr-1.5">
+                      {selectedPersonalities.fifteenDimensions && selectedPersonalities.fifteenDimensions.map((item, idx) => (
+                        <div key={idx} className="border border-slate-100/80 p-3 sm:p-3.5 rounded-xl bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-[0_1px_4px_rgba(0,0,0,0.01)]">
+                          <div className="flex items-center justify-between sm:justify-start gap-3 shrink-0 sm:w-48">
+                            <div className="text-left">
+                              <span className="text-[9px] text-slate-400 font-bold block uppercase tracking-wider">
+                                {item.group}
+                              </span>
+                              <span className="text-[11px] font-black text-slate-700 block">
+                                {item.code} {item.name}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center gap-2.5 w-full">
+                            <span className={`font-black text-[10px] w-5.5 h-5.5 rounded-full flex items-center justify-center border shrink-0 ${
+                              item.status === 'H' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                              item.status === 'M' ? 'bg-amber-50 text-amber-600 border-amber-100' :
+                              'bg-slate-50 text-slate-500 border-slate-100'
+                            }`}>
+                              {item.status}
+                            </span>
+                            <p className="text-[11px] font-semibold text-slate-500 leading-relaxed">{item.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setSelectedPersonalities(null)}
+                  className="w-full mt-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-extrabold rounded-xl text-xs transition-all shadow-sm"
+                >
+                  关闭并返回图鉴
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 底部页脚 */}
+          <footer className="w-full text-center py-8 border-t border-slate-100/80 bg-white/40 text-[11px] text-slate-400 font-bold space-y-1">
+            <p>© 2026 JBTI - JOB-BEHAVIORAL TYPE INDICATOR PROJECT.</p>
+            <p className="text-slate-300">@DonQuixoteee</p>
+          </footer>
+        </div>
+      );
+    }
+
+    // ==================== React 挂载渲染接口 ====================
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<App />);
+  </script>
+</body>
+</html>
